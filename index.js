@@ -186,7 +186,7 @@ async function main() {
 
             // network.data(graphDataList[t]);
             // network.precomputedPositions(springPositionsList[t]);
-            svg.call(network);
+            // svg.call(network);
 
             // Add the mouseover and mouseout events to the scatter plot circles
         }, 100);
