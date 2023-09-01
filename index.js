@@ -31,6 +31,17 @@ async function loadEmbedding() {
     return data;
 }
 
+// Create div for legend
+d3.select("body").append("div").attr("class", "legend");
+const legend = d3
+    .select(".legend")
+    .append("svg")
+    .attr("width", width / 5)
+    .attr("height", height)
+    .style("position", "absolute")
+    .style("top", "20")
+    .style("right", "0");
+
 // Create a network plot from the data
 async function main() {
     let t = 0;
@@ -40,10 +51,46 @@ async function main() {
         g: "#ae0001",
         s: "#2a623d",
         r: "#222f5b",
-        n: "#bebebe",
         h: "#f0c75e",
         m: "#372e29",
+        n: "#bebebe",
     };
+
+    const goodBadCategories = ["Good", "Bad"];
+    const houseCategories = [
+        "Gryffindor",
+        "Slytherin",
+        "Ravenclaw",
+        "Hufflepuff",
+        "Muggle",
+        "None",
+    ];
+
+    function fillLegend(colours, categories) {
+        legend.selectAll("*").remove();
+
+        const legendItems = legend
+            .selectAll(".legend-item")
+            .data(categories)
+            .enter()
+            .append("g")
+            .attr("class", "legend-item")
+            .attr("transform", (d, i) => `translate(30, ${5 + i * 20})`);
+
+        legendItems
+            .append("rect")
+            .attr("width", 10)
+            .attr("height", 10)
+            .attr("fill", (d, i) => Object.values(colours)[i]);
+
+        legendItems
+            .append("text")
+            .text((d) => d)
+            .attr("x", 15)
+            .attr("y", 10);
+    }
+
+    fillLegend(goodBadColours, goodBadCategories);
 
     const embeddingData = await loadEmbedding();
     const filteredData = embeddingData.filter((d) => d.t == t);
@@ -53,10 +100,10 @@ async function main() {
         .data(filteredData)
         .margin({
             top: 30,
-            right: 30,
+            right: width / 5,
             bottom: 100,
             // left: 60,
-            left: width / 2,
+            left: (2 * width) / 5,
         })
         .size(5)
         .xValue((d) => d.x_emb)
@@ -72,7 +119,7 @@ async function main() {
 
     const graphData = await loadGraph();
     const network = networkPlot()
-        .width(width / 2)
+        .width((2 * width) / 5)
         .height(height)
         .colourValue((d) => d.good_bad)
         .colours(goodBadColours)
@@ -106,7 +153,7 @@ async function main() {
         // svg.selectAll(".scatterPoints, .networkMarks")
         svg.selectAll("circle")
             .on("mouseover", function (event) {
-                console.log(this);
+                // console.log(this);
 
                 // Show the tooltip with the data
                 tooltip
@@ -263,11 +310,13 @@ async function main() {
             scatter.colourValue((d) => d.house);
             network.colours(houseColours);
             network.colourValue((d) => d.house);
+            fillLegend(houseColours, houseCategories);
         } else if (value === "Good/Bad") {
             scatter.colours(goodBadColours);
             scatter.colourValue((d) => d.good_bad);
             network.colours(goodBadColours);
             network.colourValue((d) => d.good_bad);
+            fillLegend(goodBadColours, goodBadCategories);
         }
         svg.call(scatter);
         svg.call(network);
