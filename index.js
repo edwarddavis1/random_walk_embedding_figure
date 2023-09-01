@@ -91,7 +91,7 @@ async function main() {
         .style("position", "absolute");
 
     function interactivity() {
-        svg.selectAll("circle")
+        svg.selectAll(".scatterPoints, .networkMarks")
             .on("mouseover", function (event) {
                 // console.log(this.getAttribute("name"));
 
@@ -108,7 +108,7 @@ async function main() {
 
                 d3.select(this).attr("r", 10);
 
-                d3.selectAll("circle")
+                d3.selectAll(".scatterPoints, .networkMarks")
                     .attr("fill", (d) => {
                         if (d.id == this.id) {
                             return colours[4];
@@ -138,7 +138,7 @@ async function main() {
 
                 d3.select(this).attr("r", 5).attr("stroke", "none");
 
-                d3.selectAll("circle")
+                d3.selectAll(".scatterPoints, .networkMarks")
                     .attr("fill", (d) => {
                         return d.colour;
                     })

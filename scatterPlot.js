@@ -66,6 +66,42 @@ export const scatterPlot = () => {
 
         const myTransition = d3.transition().duration(200);
 
+        const node_trace = selection
+            .append("g")
+            .selectAll(".scatterPointsTrace")
+            .data(marks)
+            .join(
+                (enter) =>
+                    enter
+                        .append("circle")
+                        .attr("r", 5)
+                        .style("opacity", 0)
+                        .attr("cx", (3 * width) / 4)
+                        .attr("cy", height / 2),
+                // .call((enter) =>
+                //     enter
+                //         .transition(myTransition)
+                //         .delay((d, i) => i * 0)
+                // ),
+                (update) =>
+                    update.call((update) =>
+                        update.transition(myTransition).delay((d, i) => i * 0)
+                    )
+            )
+            // .transition(myTransition)
+            .attr("cx", (d) => d.x)
+            .attr("cy", (d) => d.y)
+            .attr("id", (d) => d.id)
+            .style("pointer-events", "none")
+            .style("opacity", 0.02)
+            .attr("class", "scatterPointsTrace")
+            .attr("r", size)
+            .attr("name", (d) => d.name)
+            .attr("degree", (d) => d.degree)
+            .attr("house", (d) => d.house)
+            .attr("good_bad", (d) => d.good_bad)
+            .attr("fill", (d) => d.colour);
+
         const nodes = selection
             .selectAll(".scatterPoints")
             .data(marks)
@@ -100,41 +136,6 @@ export const scatterPlot = () => {
             .attr("good_bad", (d) => d.good_bad)
             .attr("fill", (d) => d.colour);
         // .attr("fill", (d) => colours[1]);
-
-        const node_trace = selection
-            .append("g")
-            .selectAll(".scatterPointsTrace")
-            .data(marks)
-            .join(
-                (enter) =>
-                    enter
-                        .append("circle")
-                        .attr("r", 5)
-                        .style("opacity", 0)
-                        .attr("cx", (3 * width) / 4)
-                        .attr("cy", height / 2),
-                // .call((enter) =>
-                //     enter
-                //         .transition(myTransition)
-                //         .delay((d, i) => i * 0)
-                // ),
-                (update) =>
-                    update.call((update) =>
-                        update.transition(myTransition).delay((d, i) => i * 0)
-                    )
-            )
-            // .transition(myTransition)
-            .attr("cx", (d) => d.x)
-            .attr("cy", (d) => d.y)
-            .attr("id", (d) => d.id)
-            .style("opacity", 0.02)
-            .attr("class", "scatterPointsTrace")
-            .attr("r", size)
-            .attr("name", (d) => d.name)
-            .attr("degree", (d) => d.degree)
-            .attr("house", (d) => d.house)
-            .attr("good_bad", (d) => d.good_bad)
-            .attr("fill", (d) => d.colour);
 
         // Add x and y axes
         selection

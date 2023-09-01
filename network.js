@@ -44,7 +44,7 @@ export const networkPlot = () => {
             .data(data.links)
             .join("line")
             .attr("stroke-width", (d) => Math.sqrt(d.weight))
-            .attr("class", "network");
+            .attr("class", "networkLinks");
 
         // Assign a colourScaleDisc if string, and colourScale if number
         data.nodes.forEach((d) => {
@@ -64,7 +64,7 @@ export const networkPlot = () => {
             .attr("r", 5)
             .attr("fill", (d) => d.colour)
             .attr("tau", (d) => d.tau)
-            .attr("class", "network")
+            .attr("class", "networkMarks")
             .attr("name", (d) => d.name)
             .attr("house", (d) => d.house)
             .attr("degree", (d) => +d.degree)
