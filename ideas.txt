@@ -39,10 +39,10 @@ After this, add an update colour (same green) to the scatter (this will be diffe
 ** To do
 - [X] Get the scatter working - go from uniform to trained.
 - [ ] Add legend
-- [ ] Add ability to change colour
+- [X] Add ability to change colour
 - [ ] Get one random walk working.
 - [ ] Get neighbourhood highlighting working.
 - [ ] Get one full update
 - [ ] Get all updates working
 - [ ] Add in speed controls
-- [ ] Reset button
+- [X] Reset button

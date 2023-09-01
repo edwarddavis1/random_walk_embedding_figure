@@ -15,14 +15,15 @@ export const scatterPlot = () => {
     let yDomain;
     let yAxisLabel;
     let xAxisLabel;
-    let colours = [
-        "#41b6c4",
-        "#CA054D",
-        "#3B1C32",
-        "#B96D40",
-        "#F9C846",
-        "#6153CC",
-    ];
+    let colours;
+    // let colours = [
+    //     "#41b6c4",
+    //     "#CA054D",
+    //     "#3B1C32",
+    //     "#B96D40",
+    //     "#F9C846",
+    //     "#6153CC",
+    // ];
 
     const my = (selection) => {
         const x = d3
@@ -44,11 +45,10 @@ export const scatterPlot = () => {
             .domain(d3.extent(data, colourValue))
             .interpolator(d3.interpolateViridis);
 
-        // make discrete colour scale
         const colourScaleDisc = d3
             .scaleOrdinal()
-            .domain(d3.extent(data, colourValue))
-            .range(colours);
+            .domain(Object.keys(colours))
+            .range(Object.values(colours));
 
         const marks = data.map((d) => ({
             x: x(xValue(d)),
@@ -181,48 +181,6 @@ export const scatterPlot = () => {
             .attr("y", margin.top + height - margin.top - margin.bottom + 20)
             .attr("class", "xAxisLabel") // This ensures that multiple labels don't plot when animating
             .text(xAxisLabel);
-
-        // // Node highlighing on hover
-        // d3.selectAll("circle")
-        //     .on("mouseover", function (_) {
-        //         d3.select(this)
-        //             .attr("r", 10)
-        //             .attr("stroke", "black")
-        //             .attr("stroke-width", 2);
-        //     })
-        //     .on("mouseout", function (_) {
-        //         d3.select(this).attr("r", 5).attr("stroke", "none");
-        //     });
-
-        // d3.selectAll("circle")
-        //     .on("mouseover", function (_) {
-        //         d3.select(this).attr("r", 10);
-
-        //         d3.selectAll("circle")
-        //             .attr("fill", (d) => {
-        //                 if (d.id == this.id) {
-        //                     return colours[4];
-        //                 } else {
-        //                     return colours[0];
-        //                 }
-        //             })
-        //             .attr("r", (d) => {
-        //                 if (d.id == this.id) {
-        //                     return 10;
-        //                 } else {
-        //                     return 5;
-        //                 }
-        //             });
-        //     })
-        //     .on("mouseout", function (_) {
-        //         d3.select(this).attr("r", 5).attr("stroke", "none");
-
-        //         d3.selectAll("circle")
-        //             .attr("fill", (d) => {
-        //                 return colours[0];
-        //             })
-        //             .attr("r", 5);
-        //     });
     };
 
     my.width = function (_) {
@@ -266,6 +224,9 @@ export const scatterPlot = () => {
     };
     my.tau = function (_) {
         return arguments.length ? ((tau = _), my) : tau;
+    };
+    my.colours = function (_) {
+        return arguments.length ? ((colours = _), my) : colours;
     };
 
     return my;

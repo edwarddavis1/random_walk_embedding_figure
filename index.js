@@ -35,6 +35,16 @@ async function loadEmbedding() {
 async function main() {
     let t = 0;
 
+    let goodBadColours = { 1: "#CA054D", 0: "#41b6c4" };
+    let houseColours = {
+        g: "#ae0001",
+        s: "#2a623d",
+        r: "#222f5b",
+        n: "#bebebe",
+        h: "#f0c75e",
+        m: "#372e29",
+    };
+
     const embeddingData = await loadEmbedding();
     const filteredData = embeddingData.filter((d) => d.t == t);
     const scatter = scatterPlot()
@@ -55,6 +65,7 @@ async function main() {
         .xAxisLabel("Embedding Dimension 1")
         .xDomain(d3.extent(embeddingData, (d) => d.x_emb))
         .yDomain(d3.extent(embeddingData, (d) => d.y_emb))
+        .colours(goodBadColours)
         .colourValue((d) => d.good_bad);
 
     svg.call(scatter);
@@ -64,6 +75,7 @@ async function main() {
         .width(width / 2)
         .height(height)
         .colourValue((d) => d.good_bad)
+        .colours(goodBadColours)
         .data(graphData);
     svg.call(network);
 
@@ -91,9 +103,10 @@ async function main() {
         .style("position", "absolute");
 
     function interactivity() {
-        svg.selectAll(".scatterPoints, .networkMarks")
+        // svg.selectAll(".scatterPoints, .networkMarks")
+        svg.selectAll("circle")
             .on("mouseover", function (event) {
-                // console.log(this.getAttribute("name"));
+                console.log(this);
 
                 // Show the tooltip with the data
                 tooltip
@@ -210,49 +223,56 @@ async function main() {
 
     d3.select("body")
         .append("text")
-        .text("Colour by:")
+        .text("Colour: ")
+        .attr("class", "colour-text")
         .style("position", "absolute")
         .style("bottom", "20px")
         .style("left", `${width / 2}px`);
 
-    const colourButtonContainer = d3
+    const select = d3
         .select("body")
-        .append("div")
-        .attr("class", "colour-button-container")
-        .style("left", `${width / 2 + 80}px`);
+        .append("select")
+        .attr("class", "colour-select")
+        .style("position", "absolute")
+        .style("bottom", "15px")
+        .style("left", `${width / 2 + 55}px`)
+        .style("padding", "5px 10px")
+        .style("border", "none")
+        .style("background-color", colours[0])
+        .style("color", "#fff")
+        .style("font-size", "16px")
+        .style("cursor", "pointer");
 
-    const degreeButton = colourButtonContainer.append("button").text("Degree");
+    const options = select
+        .selectAll("option")
+        .data(["Good/Bad", "House", "Degree"])
+        .enter()
+        .append("option")
+        .text((d) => d)
+        .style("background-color", colours[0])
+        .style("color", "#fff");
 
-    const houseButton = colourButtonContainer.append("button").text("House");
-
-    const goodBadButton = colourButtonContainer
-        .append("button")
-        .text("Good/Bad");
-
-    degreeButton.on("click", () => {
+    select.on("change", () => {
+        const value = select.property("value");
         svg.selectAll("circle, .networkLinks").remove();
-        scatter.colourValue((d) => d.degree);
+        if (value === "Degree") {
+            scatter.colourValue((d) => d.degree);
+            network.colourValue((d) => d.degree);
+        } else if (value === "House") {
+            scatter.colours(houseColours);
+            scatter.colourValue((d) => d.house);
+            network.colours(houseColours);
+            network.colourValue((d) => d.house);
+        } else if (value === "Good/Bad") {
+            scatter.colours(goodBadColours);
+            scatter.colourValue((d) => d.good_bad);
+            network.colours(goodBadColours);
+            network.colourValue((d) => d.good_bad);
+        }
         svg.call(scatter);
-        network.colourValue((d) => d.degree);
         svg.call(network);
-    });
 
-    houseButton.on("click", () => {
-        svg.selectAll("circle, .networkLinks").remove();
-
-        scatter.colourValue((d) => d.house);
-        svg.call(scatter);
-        network.colourValue((d) => d.house);
-        svg.call(network);
-    });
-
-    goodBadButton.on("click", () => {
-        svg.selectAll("circle, .networkLinks").remove();
-
-        scatter.colourValue((d) => d.good_bad);
-        svg.call(scatter);
-        network.colourValue((d) => d.good_bad);
-        svg.call(network);
+        interactivity();
     });
 }
 

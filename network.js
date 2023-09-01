@@ -3,14 +3,15 @@ export const networkPlot = () => {
     let height;
     let data;
     let colourValue;
-    let colours = [
-        "#41b6c4",
-        "#CA054D",
-        "#3B1C32",
-        "#B96D40",
-        "#F9C846",
-        "#6153CC",
-    ];
+    let colours;
+    // let colours = [
+    //     "#41b6c4",
+    //     "#CA054D",
+    //     "#3B1C32",
+    //     "#B96D40",
+    //     "#F9C846",
+    //     "#6153CC",
+    // ];
 
     const my = (selection) => {
         // const myTransition = d3.transition().duration(1000);
@@ -23,8 +24,8 @@ export const networkPlot = () => {
         // make discrete colour scale
         const colourScaleDisc = d3
             .scaleOrdinal()
-            .domain(d3.extent(data.nodes, colourValue))
-            .range(colours);
+            .domain(Object.keys(colours))
+            .range(Object.values(colours));
 
         const simulation = d3
             .forceSimulation(data.nodes)
@@ -128,6 +129,9 @@ export const networkPlot = () => {
     };
     my.colourValue = function (_) {
         return arguments.length ? ((colourValue = _), my) : colourValue;
+    };
+    my.colours = function (_) {
+        return arguments.length ? ((colours = _), my) : colours;
     };
     return my;
 };
