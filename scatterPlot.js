@@ -68,7 +68,7 @@ export const scatterPlot = () => {
 
         const node_trace = selection
             .append("g")
-            .selectAll(".scatterPointsTrace")
+            .selectAll("g")
             .data(marks)
             .join(
                 (enter) =>
@@ -93,7 +93,7 @@ export const scatterPlot = () => {
             .attr("cy", (d) => d.y)
             .attr("id", (d) => d.id)
             .style("pointer-events", "none")
-            .style("opacity", 0.02)
+            .style("opacity", 0.01)
             .attr("class", "scatterPointsTrace")
             .attr("r", size)
             .attr("name", (d) => d.name)

@@ -152,16 +152,21 @@ async function main() {
     //////////////////////////////
 
     // place play and pause buttons at the top left of the page
-    const mediaButtonContainer = d3
+    const playButton = d3
         .select("body")
-        .append("div")
-        .attr("class", "media-button-container");
+        .append("button")
+        .text("Play")
+        .style("position", "absolute")
+        .style("bottom", "10px")
+        .style("left", "60px");
 
-    const playButton = mediaButtonContainer.append("button").text("Play");
-
-    const pauseButton = mediaButtonContainer.append("button").text("Pause");
-
-    const resetButton = mediaButtonContainer.append("button").text("Reset");
+    const pauseButton = d3
+        .select("body")
+        .append("button")
+        .text("Pause")
+        .style("position", "absolute")
+        .style("bottom", "10px")
+        .style("left", "140px");
 
     let intervalId;
     playButton.on("click", () => {
@@ -191,68 +196,6 @@ async function main() {
         clearInterval(intervalId);
 
         interactivity();
-    });
-
-    resetButton.on("click", () => {
-        t = 0;
-
-        scatter.data(embeddingData.filter((d) => d.t == t));
-        svg.call(scatter);
-
-        svg.selectAll(".scatterPointsTrace").remove();
-
-        // network.data(graphDataList[t]);
-        // network.precomputedPositions(springPositionsList[t]);
-        // svg.call(network);
-
-        interactivity();
-    });
-
-    d3.select("body")
-        .append("text")
-        .text("Colour by:")
-        .style("position", "absolute")
-        .style("bottom", "20px")
-        .style("left", `${width / 2}px`);
-
-    const colourButtonContainer = d3
-        .select("body")
-        .append("div")
-        .attr("class", "colour-button-container")
-        .style("left", `${width / 2 + 80}px`);
-
-    const degreeButton = colourButtonContainer.append("button").text("Degree");
-
-    const houseButton = colourButtonContainer.append("button").text("House");
-
-    const goodBadButton = colourButtonContainer
-        .append("button")
-        .text("Good/Bad");
-
-    degreeButton.on("click", () => {
-        svg.selectAll("circle, .networkLinks").remove();
-        scatter.colourValue((d) => d.degree);
-        svg.call(scatter);
-        network.colourValue((d) => d.degree);
-        svg.call(network);
-    });
-
-    houseButton.on("click", () => {
-        svg.selectAll("circle, .networkLinks").remove();
-
-        scatter.colourValue((d) => d.house);
-        svg.call(scatter);
-        network.colourValue((d) => d.house);
-        svg.call(network);
-    });
-
-    goodBadButton.on("click", () => {
-        svg.selectAll("circle, .networkLinks").remove();
-
-        scatter.colourValue((d) => d.good_bad);
-        svg.call(scatter);
-        network.colourValue((d) => d.good_bad);
-        svg.call(network);
     });
 }
 

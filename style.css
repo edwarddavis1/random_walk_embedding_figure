@@ -70,3 +70,30 @@ button:hover {
 .tooltip {
     font-family: "Roboto";
 }
+
+.media-button-container {
+  display: flex;
+  justify-content: space-between;
+  position: absolute;
+  bottom: 10px;
+  left: 30px;
+  width: 350px;
+}
+
+.media-button-container button {
+  width: 110px;
+}
+
+.colour-button-container {
+    display: flex;
+    justify-content: space-between;
+    position: absolute;
+    bottom: 10px;
+    width:350px;
+}
+
+.colour-button-container button {
+    width: 110px
+/* width: calc(50% - 10px); */
+} 
+
