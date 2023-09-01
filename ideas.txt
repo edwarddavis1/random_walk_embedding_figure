@@ -1,0 +1,32 @@
+** figure summary
+
+A figure that shows how node2vec works. 
+- Show how random walks are used to work out how similar two nodes are. To do this we show at least some random walks (which end in the neighbourhood being highlighted). 
+- From the found neighbourhoods, we then see how the update function works; term one will bring the neighbours closer together and term two will push non-neighbours further away.
+
+- If possible, it would be good to show every random walk/neighbourhood, and then have controls to either speed up or slow down the training (slower shows the random walks better, faster shows the training better).
+	[Note this may be way too slow to be useful]
+
+
+** Main parts
+- Random walks
+- Window
+- Neighbourhoods
+- Update (first term)
+- Update (second term)
+
+
+** Data needed
+- Try store all the random walks (if not too much)
+- Graph (ideally somewhat small - maybe just use harry potter)
+- Embedding steps (from uniform to full embedding)
+- Attributes: name, good/bad, house, degree
+
+
+** To do
+- [X] Get the scatter working - go from uniform to trained.
+- [ ] Get one random walk working.
+- [ ] Get neighbourhood highlighting working.
+- [ ] Get one full update
+- [ ] Get all updates working
+- [ ] Add in speed controls

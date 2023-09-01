@@ -4,6 +4,7 @@ export const scatterPlot = () => {
     let width;
     let height;
     let data;
+    let tau;
     let margin;
     let size;
     let xValue;
@@ -24,10 +25,6 @@ export const scatterPlot = () => {
     ];
 
     const my = (selection) => {
-        // console.log(data.length);
-        // console.log(d3.extent(data, yValue));
-        // console.log(d3.extent(data, xValue));
-
         const x = d3
             .scaleLinear()
             // .domain(d3.extent(data, xValue))
@@ -42,15 +39,32 @@ export const scatterPlot = () => {
             .domain(yDomain)
             .range([height - margin.bottom, margin.top]);
 
+        const colourScale = d3
+            .scaleSequential()
+            .domain(d3.extent(data, colourValue))
+            .interpolator(d3.interpolateViridis);
+
+        // make discrete colour scale
+        const colourScaleDisc = d3
+            .scaleOrdinal()
+            .domain(d3.extent(data, colourValue))
+            .range(colours);
+
         const marks = data.map((d) => ({
             x: x(xValue(d)),
             y: y(yValue(d)),
-            tau: d.tau,
+            name: d.name,
+            degree: d.degree,
             id: d.id,
-            col: colours[d.tau],
+            // if string, use colourScaleDisc
+            // if number, use colourScale
+            colour:
+                typeof colourValue(d) === "string"
+                    ? colourScaleDisc(colourValue(d))
+                    : colourScale(colourValue(d)),
         }));
 
-        const myTransition = d3.transition().duration(500);
+        const myTransition = d3.transition().duration(200);
 
         const nodes = selection
             .selectAll("circle")
@@ -66,22 +80,25 @@ export const scatterPlot = () => {
                         .call((enter) =>
                             enter
                                 .transition(myTransition)
-                                .delay((d, i) => i * 1)
+                                .delay((d, i) => i * 0)
                         ),
                 (update) =>
                     update.call((update) =>
-                        update.transition(myTransition).delay((d, i) => i * 1)
+                        update.transition(myTransition).delay((d, i) => i * 0)
                     )
             )
             .transition(myTransition)
             .attr("cx", (d) => d.x)
             .attr("cy", (d) => d.y)
-            // id each circle with its id element
             .attr("id", (d) => d.id)
             .style("opacity", 1)
             .attr("r", size)
-            // .attr("fill", (d) => (d.tau == 1 ? colours[0] : colours[1]));
-            .attr("fill", (d) => d.col);
+            .attr("name", (d) => d.name)
+            .attr("degree", (d) => d.degree)
+            .attr("house", (d) => d.house)
+            .attr("good_bad", (d) => d.good_bad)
+            .attr("fill", (d) => d.colour);
+        // .attr("fill", (d) => colours[1]);
 
         // Add x and y axes
         selection
@@ -149,7 +166,7 @@ export const scatterPlot = () => {
         //                 if (d.id == this.id) {
         //                     return colours[4];
         //                 } else {
-        //                     return d.tau == 1 ? colours[0] : colours[1];
+        //                     return colours[0];
         //                 }
         //             })
         //             .attr("r", (d) => {
@@ -165,7 +182,7 @@ export const scatterPlot = () => {
 
         //         d3.selectAll("circle")
         //             .attr("fill", (d) => {
-        //                 return d.tau == 1 ? colours[0] : colours[1];
+        //                 return colours[0];
         //             })
         //             .attr("r", 5);
         //     });
@@ -209,6 +226,9 @@ export const scatterPlot = () => {
     };
     my.xAxisLabel = function (_) {
         return arguments.length ? ((xAxisLabel = _), my) : xAxisLabel;
+    };
+    my.tau = function (_) {
+        return arguments.length ? ((tau = _), my) : tau;
     };
 
     return my;

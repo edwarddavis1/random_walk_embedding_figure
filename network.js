@@ -2,6 +2,7 @@ export const networkPlot = () => {
     let width;
     let height;
     let data;
+    let colourValue;
     let colours = [
         "#41b6c4",
         "#CA054D",
@@ -12,6 +13,19 @@ export const networkPlot = () => {
     ];
 
     const my = (selection) => {
+        // const myTransition = d3.transition().duration(1000);
+
+        const colourScale = d3
+            .scaleSequential()
+            .domain(d3.extent(data.nodes, colourValue))
+            .interpolator(d3.interpolateViridis);
+
+        // make discrete colour scale
+        const colourScaleDisc = d3
+            .scaleOrdinal()
+            .domain(d3.extent(data.nodes, colourValue))
+            .range(colours);
+
         const simulation = d3
             .forceSimulation(data.nodes)
             .force(
@@ -21,6 +35,7 @@ export const networkPlot = () => {
             .force("charge", d3.forceManyBody())
             .force("center", d3.forceCenter(width / 2, height / 2));
 
+        // Only draw the links if the data length is less than 100
         const link = selection
             .append("g")
             .attr("stroke", "#999")
@@ -28,84 +43,76 @@ export const networkPlot = () => {
             .selectAll("line")
             .data(data.links)
             .join("line")
-            .attr("stroke-width", 0.2)
+            .attr("stroke-width", (d) => Math.sqrt(d.weight))
             .attr("class", "network");
+
+        // Assign a colourScaleDisc if string, and colourScale if number
+        data.nodes.forEach((d) => {
+            d.colour =
+                typeof colourValue(d) === "string"
+                    ? colourScaleDisc(colourValue(d))
+                    : colourScale(colourValue(d));
+        });
 
         const node = selection
             .append("g")
+            // .attr("stroke", "#fff")
+            // .attr("stroke-width", 1.5)
             .selectAll("circle")
             .data(data.nodes)
             .join("circle")
             .attr("r", 5)
-            .attr("fill", (d) => colours[d.tau])
+            .attr("fill", (d) => d.colour)
+            .attr("tau", (d) => d.tau)
             .attr("class", "network")
+            .attr("name", (d) => d.name)
+            .attr("house", (d) => d.house)
+            .attr("degree", (d) => +d.degree)
+            .attr("good_bad", (d) => d.good_bad)
             .attr("id", (d) => d.id);
 
         node.append("title").text((d) => d.id);
 
         simulation.on("tick", () => {
-            if (data.nodes.length <= 20) {
-                link.attr("x1", (d) => d.source.x)
-                    .attr("y1", (d) => d.source.y)
-                    .attr("x2", (d) => d.target.x)
-                    .attr("y2", (d) => d.target.y);
-            }
+            // if (data.nodes.length <= 20) {
+            link.attr("x1", (d) => d.source.x)
+                .attr("y1", (d) => d.source.y)
+                .attr("x2", (d) => d.target.x)
+                .attr("y2", (d) => d.target.y);
+            // }
+
             node.attr("cx", (d) => d.x).attr("cy", (d) => d.y);
         });
 
-        // var link = selection
-        //     .selectAll("line")
-        //     .data(data.links)
-        //     .enter()
-        //     .append("line")
-        //     .style("stroke", "#aaa");
+        // d3.selectAll("circle")
+        //     .on("mouseover", function (_) {
+        //         d3.select(this).attr("r", 10);
 
-        // // Initialize the nodes
-        // var node = selection
-        //     .selectAll("circle")
-        //     .data(data.nodes)
-        //     .enter()
-        //     .append("circle")
-        //     .attr("r", 20)
-        //     .style("fill", "#69b3a2");
-
-        // // Let's list the force we wanna apply on the network
-        // var simulation = d3
-        //     .forceSimulation(data.nodes) // Force algorithm is applied to data.nodes
-        //     .force(
-        //         "link",
-        //         d3
-        //             .forceLink() // This force provides links between nodes
-        //             .id(function (d) {
-        //                 return d.id;
-        //             }) // This provide  the id of a node
-        //             .links(data.links) // and this the list of links
-        //     )
-        //     .force("charge", d3.forceManyBody().strength(-400)) // This adds repulsion between nodes. Play with the -400 for the repulsion strength
-        //     .force("center", d3.forceCenter(width / 2, height / 2)) // This force attracts nodes to the center of the svg area
-        //     .on("end", ticked);
-
-        // // This function is run at each iteration of the force algorithm, updating the nodes position.
-        // function ticked() {
-        //     link.attr("x1", function (d) {
-        //         return d.source.x;
+        //         d3.selectAll("circle")
+        //             .attr("fill", (d) => {
+        //                 if (d.id == this.id) {
+        //                     return colours[4];
+        //                 } else {
+        //                     return colours[1];
+        //                 }
+        //             })
+        //             .attr("r", (d) => {
+        //                 if (d.id == this.id) {
+        //                     return 10;
+        //                 } else {
+        //                     return 5;
+        //                 }
+        //             });
         //     })
-        //         .attr("y1", function (d) {
-        //             return d.source.y;
-        //         })
-        //         .attr("x2", function (d) {
-        //             return d.target.x;
-        //         })
-        //         .attr("y2", function (d) {
-        //             return d.target.y;
-        //         });
+        //     .on("mouseout", function (_) {
+        //         d3.select(this).attr("r", 5).attr("stroke", "none");
 
-        //     node.attr("cx", function (d) {
-        //         return d.x + 6;
-        //     }).attr("cy", function (d) {
-        //         return d.y - 6;
+        //         d3.selectAll("circle")
+        //             .attr("fill", (d) => {
+        //                 return colours[1];
+        //             })
+        //             .attr("r", 5);
         //     });
-        // }
     };
     my.width = function (_) {
         return arguments.length ? ((width = _), my) : width;
@@ -118,6 +125,9 @@ export const networkPlot = () => {
     };
     my.get_node = function (id) {
         return data.nodes.filter((d) => d.id == id)[0];
+    };
+    my.colourValue = function (_) {
+        return arguments.length ? ((colourValue = _), my) : colourValue;
     };
     return my;
 };

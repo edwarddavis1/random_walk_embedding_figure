@@ -1,3 +1,11 @@
+"""
+PLAN
+
+- Get random walk paths (epoch=1)
+- Each update to the embedding after a given random walk path
+- If possible, get the by-node update (each pass of the loss)
+
+"""
 # %%
 import nodevectors
 import plotly.express as px
@@ -240,6 +248,9 @@ func2 = np.log(np.sum(np.exp(arr)))
 func1 / func2
 
 # %%
+from dyn_skip_gram import dyn_skip_gram
+from dyn_skip_gram import Node2Vec_for_dyn_skip_gram
+
 ya_list = []
 num_epochs = 500
 

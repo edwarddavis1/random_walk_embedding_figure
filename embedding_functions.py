@@ -127,6 +127,18 @@ def UASE(As, d, flat=True, sparse_matrix=False, return_left=False):
         return XA, YA
 
 
+def single_spectral(A, d):
+    UA, SA, VAt = sparse.linalg.svds(A, d)
+    VA = VAt.T
+    idx = SA.argsort()[::-1]
+    VA = VA[:, idx]
+    UA = UA[:, idx]
+    SA = SA[idx]
+    YA_flat = VA @ np.diag(np.sqrt(SA))
+
+    return YA_flat
+
+
 def independent_n2v(
     As, d, p=1, q=1, flat=True, num_walks=20, window=10, walklen=30, verbose=False
 ):
