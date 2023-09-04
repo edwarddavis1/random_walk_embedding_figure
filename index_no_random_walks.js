@@ -31,9 +31,66 @@ async function loadEmbedding() {
     return data;
 }
 
+// Create div for legend
+d3.select("body").append("div").attr("class", "legend");
+const legend = d3
+    .select(".legend")
+    .append("svg")
+    .attr("width", width / 5)
+    .attr("height", height)
+    .style("position", "absolute")
+    .style("top", "20")
+    .style("right", "0");
+
 // Create a network plot from the data
 async function main() {
     let t = 0;
+
+    let goodBadColours = { 1: "#CA054D", 0: "#41b6c4" };
+    let houseColours = {
+        g: "#ae0001",
+        s: "#2a623d",
+        r: "#222f5b",
+        h: "#f0c75e",
+        m: "#372e29",
+        n: "#bebebe",
+    };
+
+    const goodBadCategories = ["Good", "Bad"];
+    const houseCategories = [
+        "Gryffindor",
+        "Slytherin",
+        "Ravenclaw",
+        "Hufflepuff",
+        "Muggle",
+        "None",
+    ];
+
+    function fillLegend(colours, categories) {
+        legend.selectAll("*").remove();
+
+        const legendItems = legend
+            .selectAll(".legend-item")
+            .data(categories)
+            .enter()
+            .append("g")
+            .attr("class", "legend-item")
+            .attr("transform", (d, i) => `translate(30, ${5 + i * 20})`);
+
+        legendItems
+            .append("rect")
+            .attr("width", 10)
+            .attr("height", 10)
+            .attr("fill", (d, i) => Object.values(colours)[i]);
+
+        legendItems
+            .append("text")
+            .text((d) => d)
+            .attr("x", 15)
+            .attr("y", 10);
+    }
+
+    fillLegend(goodBadColours, goodBadCategories);
 
     const embeddingData = await loadEmbedding();
     const filteredData = embeddingData.filter((d) => d.t == t);
@@ -43,10 +100,10 @@ async function main() {
         .data(filteredData)
         .margin({
             top: 30,
-            right: 30,
+            right: width / 5,
             bottom: 100,
             // left: 60,
-            left: width / 2,
+            left: (2 * width) / 5,
         })
         .size(5)
         .xValue((d) => d.x_emb)
@@ -55,15 +112,17 @@ async function main() {
         .xAxisLabel("Embedding Dimension 1")
         .xDomain(d3.extent(embeddingData, (d) => d.x_emb))
         .yDomain(d3.extent(embeddingData, (d) => d.y_emb))
+        .colours(goodBadColours)
         .colourValue((d) => d.good_bad);
 
     svg.call(scatter);
 
     const graphData = await loadGraph();
     const network = networkPlot()
-        .width(width / 2)
+        .width((2 * width) / 5)
         .height(height)
         .colourValue((d) => d.good_bad)
+        .colours(goodBadColours)
         .data(graphData);
     svg.call(network);
 
@@ -91,9 +150,10 @@ async function main() {
         .style("position", "absolute");
 
     function interactivity() {
-        svg.selectAll(".scatterPoints, .networkMarks")
+        // svg.selectAll(".scatterPoints, .networkMarks")
+        svg.selectAll("circle")
             .on("mouseover", function (event) {
-                // console.log(this.getAttribute("name"));
+                // console.log(this);
 
                 // Show the tooltip with the data
                 tooltip
@@ -152,21 +212,16 @@ async function main() {
     //////////////////////////////
 
     // place play and pause buttons at the top left of the page
-    const playButton = d3
+    const mediaButtonContainer = d3
         .select("body")
-        .append("button")
-        .text("Play")
-        .style("position", "absolute")
-        .style("bottom", "10px")
-        .style("left", "60px");
+        .append("div")
+        .attr("class", "media-button-container");
 
-    const pauseButton = d3
-        .select("body")
-        .append("button")
-        .text("Pause")
-        .style("position", "absolute")
-        .style("bottom", "10px")
-        .style("left", "140px");
+    const playButton = mediaButtonContainer.append("button").text("Play");
+
+    const pauseButton = mediaButtonContainer.append("button").text("Pause");
+
+    const resetButton = mediaButtonContainer.append("button").text("Reset");
 
     let intervalId;
     playButton.on("click", () => {
@@ -194,6 +249,77 @@ async function main() {
 
     pauseButton.on("click", () => {
         clearInterval(intervalId);
+
+        interactivity();
+    });
+
+    resetButton.on("click", () => {
+        t = 0;
+
+        scatter.data(embeddingData.filter((d) => d.t == t));
+        svg.call(scatter);
+
+        svg.selectAll(".scatterPointsTrace").remove();
+
+        // network.data(graphDataList[t]);
+        // network.precomputedPositions(springPositionsList[t]);
+        // svg.call(network);
+
+        interactivity();
+    });
+
+    d3.select("body")
+        .append("text")
+        .text("Colour: ")
+        .attr("class", "colour-text")
+        .style("position", "absolute")
+        .style("bottom", "20px")
+        .style("left", `${width / 2}px`);
+
+    const select = d3
+        .select("body")
+        .append("select")
+        .attr("class", "colour-select")
+        .style("position", "absolute")
+        .style("bottom", "15px")
+        .style("left", `${width / 2 + 55}px`)
+        .style("padding", "5px 10px")
+        .style("border", "none")
+        .style("background-color", colours[0])
+        .style("color", "#fff")
+        .style("font-size", "16px")
+        .style("cursor", "pointer");
+
+    const options = select
+        .selectAll("option")
+        .data(["Good/Bad", "House", "Degree"])
+        .enter()
+        .append("option")
+        .text((d) => d)
+        .style("background-color", colours[0])
+        .style("color", "#fff");
+
+    select.on("change", () => {
+        const value = select.property("value");
+        svg.selectAll("circle, .networkLinks").remove();
+        if (value === "Degree") {
+            scatter.colourValue((d) => d.degree);
+            network.colourValue((d) => d.degree);
+        } else if (value === "House") {
+            scatter.colours(houseColours);
+            scatter.colourValue((d) => d.house);
+            network.colours(houseColours);
+            network.colourValue((d) => d.house);
+            fillLegend(houseColours, houseCategories);
+        } else if (value === "Good/Bad") {
+            scatter.colours(goodBadColours);
+            scatter.colourValue((d) => d.good_bad);
+            network.colours(goodBadColours);
+            network.colourValue((d) => d.good_bad);
+            fillLegend(goodBadColours, goodBadCategories);
+        }
+        svg.call(scatter);
+        svg.call(network);
 
         interactivity();
     });

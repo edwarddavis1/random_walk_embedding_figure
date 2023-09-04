@@ -101,16 +101,16 @@ plot_embedding(ya, A.shape[0], 1, node_class)
 
 # Have selected emnity network (link if bad interaction)
 
-import nodevectors
+# import nodevectors
 
-ya = nodevectors.Node2Vec(
-    n_components=2, walklen=10, epochs=2000, w2vparams={"window": 3}
-).fit_transform(A @ A.T)
+# ya = nodevectors.Node2Vec(
+#     n_components=2, walklen=10, epochs=2000, w2vparams={"window": 3}
+# ).fit_transform(A @ A.T)
 
-# ya = PCA(n_components=2).fit_transform(ya)
+# # ya = PCA(n_components=2).fit_transform(ya)
 
-plot_embedding(ya, n, 1, nodes)
-plot_embedding(ya, n, 1, node_class)
+# plot_embedding(ya, n, 1, nodes)
+# plot_embedding(ya, n, 1, node_class)
 
 
 # %%
@@ -121,27 +121,40 @@ from dyn_skip_gram import Node2Vec_for_dyn_skip_gram
 ya_list = []
 num_epochs = 100
 
-A_square = A @ A.T
+A_square = A
+# A_square = A @ A.T
 
 from tqdm import tqdm
 
 for i in tqdm(range(num_epochs)):
     n2v_obj = Node2Vec_for_dyn_skip_gram(
-        n_components=2, walklen=3, epochs=20, w2vparams={"window": 2}
+        n_components=2, walklen=10, epochs=10, w2vparams={"window": 2}, keep_walks=True
     )
 
     if i == 0:
         n2v_obj.fit(A_square)
-        n2v_obj.save_vectors("walks/wv_save" + str(i) + ".emb")
+        n2v_obj.save_vectors("hp_embedding_steps/wv_save" + str(i) + ".emb")
+
+        walkdf = pd.DataFrame(np.array(n2v_obj.walks).astype(str))
+        walkdf.columns = ["walk{}".format(i) for i in range(walkdf.shape[1])]
+
+        walkdf.to_csv("hp_walks/walks_save{}.csv".format(i))
+
     else:
-        n2v_obj.fit(A_square, update_file="walks/wv_save" + str(i - 1) + ".emb")
-        n2v_obj.save_vectors("walks/wv_save" + str(i) + ".emb")
+        n2v_obj.fit(
+            A_square, update_file="hp_embedding_steps/wv_save" + str(i - 1) + ".emb"
+        )
+        n2v_obj.save_vectors("hp_embedding_steps/wv_save" + str(i) + ".emb")
+
+        walkdf = pd.DataFrame(np.array(n2v_obj.walks).astype(str))
+        walkdf.columns = ["walk{}".format(i) for i in range(walkdf.shape[1])]
+
+        walkdf.to_csv("hp_walks/walks_save{}.csv".format(i))
 
     ya_t = np.array([n2v_obj.predict(str(i)) for i in range(n)])
     ya_list.append(ya_t)
 
 ya = np.row_stack(ya_list)
-
 # %%
 T = num_epochs
 house = [attributes[attributes["name"] == i]["house"].values[0] for i in nodes]
@@ -197,7 +210,7 @@ import json
 # Save json graph
 
 # Convert tau_for_graphs to a list of ints
-G = nx.from_numpy_array(A)
+G = nx.from_numpy_array(A_square)
 
 
 # Set tau as a node attribute

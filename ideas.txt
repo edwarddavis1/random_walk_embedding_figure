@@ -38,8 +38,9 @@ After this, add an update colour (same green) to the scatter (this will be diffe
 
 ** To do
 - [X] Get the scatter working - go from uniform to trained.
-- [ ] Add legend
+- [X] Add legend
 - [X] Add ability to change colour
+- [ ] Add numbers back to the axes
 - [ ] Get one random walk working.
 - [ ] Get neighbourhood highlighting working.
 - [ ] Get one full update

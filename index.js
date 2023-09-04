@@ -1,5 +1,6 @@
 import { scatterPlot } from "./scatterPlot.js";
 import { networkPlot } from "./network.js";
+import { walkNetworkPlot } from "./randomWalkNetwork.js";
 // import { networkPlot } from "./networkNoAnimate.js";
 
 const width = window.innerWidth;
@@ -12,8 +13,13 @@ const svg = d3
     .attr("height", height);
 
 // Load data from data.json
-async function loadGraph(n) {
+async function loadGraph() {
     const data = await d3.json("./data/emnity_graph.json");
+    return data;
+}
+
+async function loadWalks(n) {
+    const data = await d3.csv(`./hp_walks/walks_save${n}.csv`);
     return data;
 }
 
@@ -115,18 +121,24 @@ async function main() {
         .colours(goodBadColours)
         .colourValue((d) => d.good_bad);
 
-    svg.call(scatter);
+    // svg.call(scatter);
+
+    const graphWalks = await loadWalks(0);
+    console.log(graphWalks);
 
     const graphData = await loadGraph();
-    const network = networkPlot()
-        .width((2 * width) / 5)
+    // const network = networkPlot()
+    const network = walkNetworkPlot()
+        // .width((2 * width) / 5)
+        .width(width)
         .height(height)
+        .walks(graphWalks)
         .colourValue((d) => d.good_bad)
         .colours(goodBadColours)
         .data(graphData);
     svg.call(network);
 
-    svg.call(network);
+    network.runWalks(3, 1000);
 
     let colours = [
         "#41b6c4",
