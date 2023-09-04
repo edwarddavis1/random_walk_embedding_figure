@@ -1,5 +1,6 @@
 import { scatterPlot } from "./scatterPlot.js";
 import { networkPlot } from "./network.js";
+import { walkNetworkPlot } from "./randomWalkNetwork.js";
 // import { networkPlot } from "./networkNoAnimate.js";
 
 const width = window.innerWidth;
@@ -12,8 +13,13 @@ const svg = d3
     .attr("height", height);
 
 // Load data from data.json
-async function loadGraph(n) {
+async function loadGraph() {
     const data = await d3.json("./data/emnity_graph.json");
+    return data;
+}
+
+async function loadWalks(n) {
+    const data = await d3.csv(`./hp_walks/walks_save${n}.csv`);
     return data;
 }
 
@@ -120,17 +126,21 @@ async function main() {
         .colours(goodBadColours)
         .colourValue((d) => d.good_bad);
 
-    svg.call(scatter);
+    // svg.call(scatter);
+
+    const graphWalks = await loadWalks(0);
+    // console.log(graphWalks);
 
     const graphData = await loadGraph();
-    const network = networkPlot()
-        .width((2 * width) / 5)
+    // const network = networkPlot()
+    const network = walkNetworkPlot()
+        // .width(width / 2)
+        .width(width)
         .height(height)
+        .walks(graphWalks)
         .colourValue((d) => d.good_bad)
         .colours(goodBadColours)
         .data(graphData);
-    svg.call(network);
-
     svg.call(network);
 
     let colours = [
@@ -216,61 +226,87 @@ async function main() {
     /////// Animation ////////////
     //////////////////////////////
 
-    // place play and pause buttons at the top left of the page
-    const mediaButtonContainer = d3
-        .select("body")
-        .append("div")
-        .attr("class", "media-button-container");
-
-    const playButton = mediaButtonContainer.append("button").text("Play");
-
-    const pauseButton = mediaButtonContainer.append("button").text("Pause");
-
-    const resetButton = mediaButtonContainer.append("button").text("Reset");
+    // Walk list div
+    d3.select("body").append("div").attr("class", "walkList");
+    const walkList = d3
+        .select(".walkList")
+        .append("svg")
+        .attr("width", width / 2)
+        .attr("height", height)
+        .style("position", "absolute")
+        .style("top", `${(height / 3) * 1}`)
+        // .style("bottom", `${(height / 4) * 3}`)
+        .style("left", `${width / 2}`);
 
     let intervalId;
-    playButton.on("click", () => {
+    let walkNum = graphWalks.length;
+    let currentWalk = 0;
+    let speed = 300;
+
+    network.runWalks(currentWalk, speed, walkList);
+    intervalId = setInterval(() => {
+        console.log(currentWalk);
+        if (currentWalk < walkNum) {
+            currentWalk++;
+            network.runWalks(currentWalk, speed, walkList);
+        } else {
+            clearInterval(intervalId);
+        }
+    }, speed * 15);
+    // }, speed * 5000000);
+
+    // options dropdown to change the speed of the animation
+    d3.select("body")
+        .append("text")
+        .text("Speed: ")
+        .attr("class", "speed-text")
+        .style("position", "absolute")
+        .style("bottom", "20px")
+        .style("left", `${width / 5 - 100}px`);
+
+    const speedSelect = d3
+        .select("body")
+        .append("select")
+        .attr("class", "speed-select")
+        .style("position", "absolute")
+        .style("bottom", "15px")
+        .style("left", `${width / 5 - 45}px`)
+        .style("padding", "5px 10px")
+        .style("border", "none")
+        .style("background-color", colours[0])
+        .style("color", "#fff")
+        .style("font-size", "16px")
+        .style("cursor", "pointer");
+
+    const speedOptions = speedSelect
+        .selectAll("option")
+        .data(["Slow", "Medium", "Fast"])
+        .enter()
+        .append("option")
+        .text((d) => d)
+        .style("background-color", colours[0])
+        .style("color", "#fff");
+
+    speedSelect.on("change", () => {
+        const value = speedSelect.property("value");
+        if (value === "Slow") {
+            speed = 300;
+        } else if (value === "Medium") {
+            speed = 50;
+        } else if (value === "Fast") {
+            speed = 1;
+        }
+        clearInterval(intervalId);
+        network.runWalks(currentWalk, speed, walkList);
         intervalId = setInterval(() => {
-            if (t != 99) {
-                t = t + 1;
+            if (currentWalk < walkNum) {
+                currentWalk++;
+                network.runWalks(currentWalk, speed, walkList);
             } else {
                 clearInterval(intervalId);
-                interactivity();
             }
-
-            // remove all network class things
-            // svg.selectAll(".network").remove();
-
-            scatter.data(embeddingData.filter((d) => d.t == t));
-            svg.call(scatter);
-
-            // network.data(graphDataList[t]);
-            // network.precomputedPositions(springPositionsList[t]);
-            // svg.call(network);
-
-            // Add the mouseover and mouseout events to the scatter plot circles
-        }, 100);
-    });
-
-    pauseButton.on("click", () => {
-        clearInterval(intervalId);
-
-        interactivity();
-    });
-
-    resetButton.on("click", () => {
-        t = 0;
-
-        scatter.data(embeddingData.filter((d) => d.t == t));
-        svg.call(scatter);
-
-        svg.selectAll(".scatterPointsTrace").remove();
-
-        // network.data(graphDataList[t]);
-        // network.precomputedPositions(springPositionsList[t]);
-        // svg.call(network);
-
-        interactivity();
+        }, speed * 15);
+        // }, speed * 500000);
     });
 
     d3.select("body")
@@ -308,28 +344,26 @@ async function main() {
         const value = select.property("value");
         svg.selectAll("circle, .networkLinks").remove();
         if (value === "Degree") {
-            scatter.colourValue((d) => d.degree);
+            // scatter.colourValue((d) => d.degree);
             network.colourValue((d) => d.degree);
         } else if (value === "House") {
-            scatter.colours(houseColours);
-            scatter.colourValue((d) => d.house);
+            // scatter.colours(houseColours);
+            // scatter.colourValue((d) => d.house);
             network.colours(houseColours);
             network.colourValue((d) => d.house);
             fillLegend(houseColours, houseCategories);
         } else if (value === "Good/Bad") {
-            scatter.colours(goodBadColours);
-            scatter.colourValue((d) => d.good_bad);
+            // scatter.colours(goodBadColours);
+            // scatter.colourValue((d) => d.good_bad);
             network.colours(goodBadColours);
             network.colourValue((d) => d.good_bad);
             fillLegend(goodBadColours, goodBadCategories);
         } else if (value === "Top Five") {
-            scatter.colours(topFiveColours);
-            scatter.colourValue((d) => d.main);
             network.colours(topFiveColours, topFiveCategories);
             network.colourValue((d) => d.main);
             fillLegend(topFiveColours, topFiveCategories);
         }
-        svg.call(scatter);
+        // svg.call(scatter);
         svg.call(network);
 
         interactivity();

@@ -42,8 +42,8 @@ After this, add an update colour (same green) to the scatter (this will be diffe
 - [X] Add ability to change colour
 - [ ] Add numbers back to the axes
 - [X] Get one random walk working.
-- [ ] Get neighbourhood highlighting working.
+- [X] Label the random walks
 - [ ] Get one full update
 - [ ] Get all updates working
-- [ ] Add in speed controls
+- [X] Add in speed controls
 - [X] Reset button

@@ -55,6 +55,10 @@ async function main() {
         m: "#372e29",
         n: "#bebebe",
     };
+    let topFiveColours = {
+        1: "#3B1C32",
+        0: "#B96D40",
+    };
 
     const goodBadCategories = ["Good", "Bad"];
     const houseCategories = [
@@ -65,6 +69,7 @@ async function main() {
         "Muggle",
         "None",
     ];
+    const topFiveCategories = ["Main Character", "Not Main Character"];
 
     function fillLegend(colours, categories) {
         legend.selectAll("*").remove();
@@ -292,7 +297,7 @@ async function main() {
 
     const options = select
         .selectAll("option")
-        .data(["Good/Bad", "House", "Degree"])
+        .data(["Good/Bad", "House", "Degree", "Top Five"])
         .enter()
         .append("option")
         .text((d) => d)
@@ -317,6 +322,12 @@ async function main() {
             network.colours(goodBadColours);
             network.colourValue((d) => d.good_bad);
             fillLegend(goodBadColours, goodBadCategories);
+        } else if (value === "Top Five") {
+            scatter.colours(topFiveColours);
+            scatter.colourValue((d) => d.main);
+            network.colours(topFiveColours, topFiveCategories);
+            network.colourValue((d) => d.main);
+            fillLegend(topFiveColours, topFiveCategories);
         }
         svg.call(scatter);
         svg.call(network);

@@ -20,6 +20,7 @@ export const walkNetworkPlot = () => {
         const colourScale = d3
             .scaleSequential()
             .domain(d3.extent(data.nodes, colourValue))
+            // .interpolator(d3.scaleDiverging(d3.interpolateSpectral));
             .interpolator(d3.interpolateViridis);
 
         // make discrete colour scale
@@ -166,14 +167,16 @@ export const walkNetworkPlot = () => {
             fillWalkList(neighbourhood);
 
             d3.select(document.getElementById(sourceNode + "-" + targetNode))
-                .attr("stroke", "green")
+                .attr("stroke", "#6153CC")
                 .attr("stroke-width", 5)
                 .transition()
                 .duration(500)
+                .attr("stroke-width", 1.5)
+                // .attr("stroke", this.colourValue());
                 .attr("stroke", "red");
 
             d3.select(document.getElementById(node2))
-                .attr("fill", "green")
+                .attr("fill", "#6153CC")
                 .attr("r", 10)
                 .transition()
                 .duration(500)

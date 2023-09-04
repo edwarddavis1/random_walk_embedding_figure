@@ -70,6 +70,11 @@ A = A[:, degrees > 0]
 nodes = np.array(nodes)[degrees > 0]
 degrees = degrees[degrees > 0]
 n = len(nodes)
+
+top_five_degree = np.argsort(degrees)[-5:]
+top_five_degree_nodes = nodes[top_five_degree]
+top_five_degree_class = np.where(np.isin(nodes, top_five_degree_nodes), "1", "0")
+
 # %%
 
 # ya = UASE([A.astype(float)], d=2, sparse_matrix=True)
@@ -124,11 +129,14 @@ num_epochs = 100
 A_square = A
 # A_square = A @ A.T
 
+# remove self edges
+A_square.setdiag(0)
+
 from tqdm import tqdm
 
 for i in tqdm(range(num_epochs)):
     n2v_obj = Node2Vec_for_dyn_skip_gram(
-        n_components=2,
+        n_components=3,
         walklen=10,
         epochs=10,
         w2vparams={"window": 2},
@@ -157,9 +165,16 @@ for i in tqdm(range(num_epochs)):
         walkdf.to_csv("hp_walks/walks_save{}.csv".format(i))
 
     ya_t = np.array([n2v_obj.predict(str(i)) for i in range(n)])
+
+    # ya_t = PCA(n_components=2).fit_transform(ya_t)
+
     ya_list.append(ya_t)
 
 ya = np.row_stack(ya_list)
+
+# %%
+ya = PCA(n_components=2).fit_transform(ya)
+
 # %%
 T = num_epochs
 house = [attributes[attributes["name"] == i]["house"].values[0] for i in nodes]
@@ -173,6 +188,7 @@ plot_df = pd.DataFrame(
         "house": np.tile(house, T),
         "good_bad": np.tile(node_class, T),
         "degree": np.tile(degrees, T),
+        "main": np.tile(top_five_degree_class, T),
         "id": np.tile(np.arange(0, n), T),
     }
 )
@@ -221,6 +237,7 @@ G = nx.from_numpy_array(A_square)
 # Set tau as a node attribute
 nx.set_node_attributes(G, dict(zip(G.nodes(), nodes)), "name")
 nx.set_node_attributes(G, dict(zip(G.nodes(), degrees.astype(float))), "degree")
+nx.set_node_attributes(G, dict(zip(G.nodes(), top_five_degree_class)), "main")
 nx.set_node_attributes(G, dict(zip(G.nodes(), house)), "house")
 nx.set_node_attributes(G, dict(zip(G.nodes(), node_class)), "good_bad")
 
@@ -238,6 +255,7 @@ pos_df["name"] = nodes
 pos_df["house"] = house
 pos_df["good_bad"] = node_class
 pos_df["degree"] = degrees
+pos_df["main"] = top_five_degree_class
 pos_df.to_csv("data/pos_emnity_graph.csv")
 
 
