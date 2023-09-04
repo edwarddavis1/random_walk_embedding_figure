@@ -35,7 +35,7 @@ export const walkNetworkPlot = () => {
                 d3.forceLink(data.links).id((d) => d.id)
             )
             .force("charge", d3.forceManyBody())
-            .force("center", d3.forceCenter(width / 2, height / 2));
+            .force("center", d3.forceCenter(width / 4, height / 2));
 
         // Only draw the links if the data length is less than 100
         const link = selection
@@ -108,8 +108,37 @@ export const walkNetworkPlot = () => {
     my.walks = function (_) {
         return arguments.length ? ((walks = _), my) : walks;
     };
-    my.runWalks = function (idx, speed) {
+    my.runWalks = function (idx, speed, walkList) {
         console.log("running walks...");
+
+        function fillWalkList(neighbourhood) {
+            // Empty the list
+            walkList.selectAll("*").remove();
+
+            const walkItems = walkList
+                .selectAll(".walk-item")
+                .data(neighbourhood)
+                .enter()
+                .append("g")
+                .attr("class", "walk-item")
+                .attr("transform", (d, i) => `translate(30, ${5 + i * 20})`);
+
+            walkItems
+                .append("circle")
+                .attr("r", 5)
+                .attr("id", "walkCircle")
+                .attr("transform", (d, i) => `translate(0, ${5})`)
+                // .attr("fill", (d) => colours[1]);
+                // .attr("fill", (d) => d.getAttribute("fill"));
+                .attr("fill", (d) => d.colour);
+
+            walkItems
+                .append("text")
+                .text((d) => d.name)
+                // .text((d) => d.getAttribute("name"))
+                .attr("x", 15)
+                .attr("y", 10);
+        }
 
         let j = 0;
         let intervalId;
@@ -118,9 +147,10 @@ export const walkNetworkPlot = () => {
         let walkNodes;
         let node1;
         let node2;
+        let neighbourhood = [];
 
         walkNodes = Object.values(walks[idx]).slice(1);
-        console.log(walkNodes);
+        // console.log(walkNodes);
 
         intervalId = setInterval(() => {
             node1 = +walkNodes[j];
@@ -129,14 +159,11 @@ export const walkNetworkPlot = () => {
             sourceNode = node1 < node2 ? node1 : node2;
             targetNode = node1 < node2 ? node2 : node1;
 
-            console.log("source: " + sourceNode);
-            console.log("target: " + targetNode);
+            const sourceCircle = document.getElementById(sourceNode);
+            const sourceCircleCopy = Object.assign({}, sourceCircle);
 
-            // d3.select(
-            //     document.getElementById(sourceNode + "-" + targetNode)
-            // )
-            //     .attr("stroke", "red")
-            //     .attr("stroke-width", 5);
+            neighbourhood.push(sourceCircleCopy.__data__);
+            fillWalkList(neighbourhood);
 
             d3.select(document.getElementById(sourceNode + "-" + targetNode))
                 .attr("stroke", "green")
@@ -158,7 +185,7 @@ export const walkNetworkPlot = () => {
             } else {
                 clearInterval(intervalId);
             }
-        }, 1000);
+        }, speed);
     };
 
     return my;

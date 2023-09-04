@@ -128,7 +128,12 @@ from tqdm import tqdm
 
 for i in tqdm(range(num_epochs)):
     n2v_obj = Node2Vec_for_dyn_skip_gram(
-        n_components=2, walklen=10, epochs=10, w2vparams={"window": 2}, keep_walks=True
+        n_components=2,
+        walklen=10,
+        epochs=10,
+        w2vparams={"window": 2},
+        keep_walks=True,
+        return_weight=1 / 5,
     )
 
     if i == 0:

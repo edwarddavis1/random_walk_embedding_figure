@@ -41,7 +41,7 @@ After this, add an update colour (same green) to the scatter (this will be diffe
 - [X] Add legend
 - [X] Add ability to change colour
 - [ ] Add numbers back to the axes
-- [ ] Get one random walk working.
+- [X] Get one random walk working.
 - [ ] Get neighbourhood highlighting working.
 - [ ] Get one full update
 - [ ] Get all updates working

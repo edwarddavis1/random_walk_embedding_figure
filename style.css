@@ -104,3 +104,11 @@ button:hover {
     color: #888;
     /* font-style: italic; */
 }
+.walkList {
+    font-family: "Roboto", sans-serif;
+    font-size: 14px;
+    font-weight: 300;
+    color: #888;
+    /* font-style: italic; */
+}
+
