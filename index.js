@@ -69,7 +69,7 @@ async function main() {
         "Muggle",
         "None",
     ];
-    const topFiveCategories = ["Main Character", "Not Main Character"];
+    const topFiveCategories = ["Not Main Character", "Main Character"];
 
     function fillLegend(colours, categories) {
         legend.selectAll("*").remove();
