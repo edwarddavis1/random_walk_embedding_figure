@@ -147,7 +147,7 @@ for i in tqdm(range(num_epochs)):
         n_components=3,
         # walklen=10,
         epochs=10,
-        walklen=20,
+        walklen=10,
         # epochs=20,
         w2vparams={"window": 2},
         keep_walks=True,
