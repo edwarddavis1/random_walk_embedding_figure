@@ -175,8 +175,6 @@ async function main() {
         }
     }
 
-    fillLegend(goodBadColours, goodBadCategories, false, "Good/Bad Characters");
-
     // get the dimensions of a selection
     // console.log(legend.node().getBoundingClientRect());
 
@@ -184,7 +182,7 @@ async function main() {
     const filteredData = embeddingData.filter((d) => d.t == t);
 
     let degreeValues = filteredData.map((d) => d.degree);
-    console.log(d3.extent(degreeValues));
+    fillLegend(degreeColours, d3.extent(degreeValues), true, "Degree");
     // continuousColourLegend(degreeColours, d3.extent(degreeValues), legend);
 
     const scatter = scatterPlot()
@@ -206,7 +204,7 @@ async function main() {
         .xDomain(d3.extent(embeddingData, (d) => d.x_emb))
         .yDomain(d3.extent(embeddingData, (d) => d.y_emb))
         .colours(goodBadColours)
-        .colourValue((d) => d.good_bad);
+        .colourValue((d) => d.degree);
 
     svg.call(scatter);
 
@@ -214,12 +212,24 @@ async function main() {
     const network = networkPlot()
         .width((2 * width) / 5)
         .height(height)
-        .colourValue((d) => d.good_bad)
+        .colourValue((d) => d.degree)
         .colours(goodBadColours)
         .data(graphData);
-    svg.call(network);
 
     svg.call(network);
+
+    console.log(graphData.links);
+    function getNeighbours(node) {
+        let neighbours = [];
+        graphData.links.forEach((d) => {
+            if (d.source.id == node.id) {
+                neighbours.push(d.target);
+            } else if (d.target.id == node.id) {
+                neighbours.push(d.source);
+            }
+        });
+        return neighbours;
+    }
 
     let colours = [
         "#41b6c4",
@@ -265,8 +275,20 @@ async function main() {
                     .attr("fill", (d) => {
                         if (d.id == this.id) {
                             return colours[4];
+                        } else if (getNeighbours(d).includes(this.__data__)) {
+                            return "orchid";
                         } else {
                             return d.colour;
+                            // return colours[1];
+                        }
+                    })
+                    .attr("opacity", (d) => {
+                        if (d.id == this.id) {
+                            return 1;
+                        } else if (getNeighbours(d).includes(this.__data__)) {
+                            return 1;
+                        } else {
+                            return 0.3;
                             // return colours[1];
                         }
                     })
@@ -277,6 +299,14 @@ async function main() {
                             return 5;
                         }
                     });
+
+                d3.selectAll(".networkLinks").attr("stroke", (d) => {
+                    if (d.source.id == this.id || d.target.id == this.id) {
+                        return "red";
+                    } else {
+                        return d.colour;
+                    }
+                });
             })
             .on("mouseout", function (d) {
                 // Hide the tooltip
@@ -295,7 +325,12 @@ async function main() {
                     .attr("fill", (d) => {
                         return d.colour;
                     })
+                    .attr("opacity", 1)
                     .attr("r", 5);
+
+                d3.selectAll(".networkLinks").attr("stroke", (d) => {
+                    return d.colour;
+                });
             });
     }
 
@@ -385,7 +420,7 @@ async function main() {
 
     const options = select
         .selectAll("option")
-        .data(["Good/Bad", "House", "Degree", "Main Characters"])
+        .data(["Degree", "House", "Good/Bad", "Main Characters"])
         .enter()
         .append("option")
         .text((d) => d)

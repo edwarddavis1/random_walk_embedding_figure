@@ -62,6 +62,12 @@ data = data.replace("-", 1)
 data = data.replace("+", 0)
 
 A = make_adjacency_matrix(n, data["source"], data["target"], data["type"])
+
+# %%
+# Add 5 empty columns to A
+# A = sparse.hstack((A, sparse.csr_matrix((n, 5))))
+
+
 # %%
 # remove zero degree nodes
 degrees = np.array(A.sum(axis=0)).flatten()
@@ -70,6 +76,8 @@ A = A[:, degrees > 0]
 nodes = np.array(nodes)[degrees > 0]
 degrees = degrees[degrees > 0]
 n = len(nodes)
+
+# degrees = np.sqrt(np.sqrt(degrees))
 
 top_five_degree = np.argsort(degrees)[-5:]
 top_five_degree_nodes = nodes[top_five_degree]
@@ -124,7 +132,7 @@ from dyn_skip_gram import Node2Vec_for_dyn_skip_gram
 
 # %%
 ya_list = []
-num_epochs = 100
+num_epochs = 200
 
 A_square = A
 # A_square = A @ A.T
@@ -137,11 +145,13 @@ from tqdm import tqdm
 for i in tqdm(range(num_epochs)):
     n2v_obj = Node2Vec_for_dyn_skip_gram(
         n_components=3,
-        walklen=10,
+        # walklen=10,
         epochs=10,
+        walklen=20,
+        # epochs=20,
         w2vparams={"window": 2},
         keep_walks=True,
-        return_weight=1 / 5,
+        return_weight=1,
     )
 
     if i == 0:
@@ -173,7 +183,7 @@ for i in tqdm(range(num_epochs)):
 ya = np.row_stack(ya_list)
 
 # %%
-ya = PCA(n_components=2).fit_transform(ya)
+# ya = PCA(n_components=2).fit_transform(ya)
 
 # %%
 T = num_epochs
