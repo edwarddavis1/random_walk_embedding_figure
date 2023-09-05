@@ -1,5 +1,6 @@
 import { scatterPlot } from "./scatterPlot.js";
 import { networkPlot } from "./network.js";
+import { getColours } from "./colours.js";
 // import { networkPlot } from "./networkNoAnimate.js";
 
 const width = window.innerWidth;
@@ -60,6 +61,62 @@ async function main() {
         0: "#B96D40",
     };
 
+    let degreeColours = getColours("viridis");
+
+    function continuousColourLegend(colours, range, selection) {
+        var grad = selection
+            // .append("defs")
+            .append("linearGradient")
+            .attr("id", "grad")
+            .attr("x1", "0%")
+            .attr("x2", "0%")
+            .attr("y1", "0%")
+            .attr("y2", "100%");
+
+        grad.selectAll("stop")
+            .data(colours)
+            .enter()
+            .append("stop")
+            .style("stop-color", function (d) {
+                return d;
+            })
+            .attr("offset", function (d, i) {
+                return 100 * (i / (colours.length - 1)) + "%";
+            });
+
+        // console.log(legend.node().getBoundingClientRect());
+        // let legendWidth = legend.node().getBoundingClientRect().width;
+        // let legendHeight = legend.node().getBoundingClientRect().height;
+        selection
+            .append("rect")
+            .attr("width", 20)
+            .attr("height", height / 2)
+            .attr("x", 30)
+            .attr("y", height / 4)
+            // .attr("top", 0)
+            // .attr("translate", `translate(${width / 5}, 20)`)
+            .style("fill", "url(#grad)");
+
+        selection
+            .append("text")
+            .text(range[1])
+            .attr("x", 60)
+            .attr("y", height / 4 + 10)
+            .attr("font-size", "12px")
+            .attr("fill", "#000");
+
+        selection
+            .append("text")
+            .text(range[0])
+            .attr("x", 60)
+            .attr("y", (height / 4) * 3)
+            .attr("font-size", "12px")
+            .attr("fill", "#000");
+    }
+
+    // console.log(Object.values(goodBadColours));
+    // continuousColourLegend(Object.values(goodBadColours), svg);
+
     const goodBadCategories = ["Good", "Bad"];
     const houseCategories = [
         "Gryffindor",
@@ -71,7 +128,7 @@ async function main() {
     ];
     const topFiveCategories = ["Not Main Character", "Main Character"];
 
-    function fillLegend(colours, categories) {
+    function fillLegend(colours, categories, continuous, legendTitle) {
         legend.selectAll("*").remove();
 
         const legendItems = legend
@@ -80,25 +137,56 @@ async function main() {
             .enter()
             .append("g")
             .attr("class", "legend-item")
-            .attr("transform", (d, i) => `translate(30, ${5 + i * 20})`);
+            .attr("transform", (d, i) => `translate(30, ${40 + i * 20})`);
 
-        legendItems
-            .append("rect")
-            .attr("width", 10)
-            .attr("height", 10)
-            .attr("fill", (d, i) => Object.values(colours)[i]);
+        if (continuous == false) {
+            legend
+                .append("text")
+                .text(legendTitle)
+                .attr("x", 30)
+                .attr("y", 20)
+                .attr("font-size", "16px")
+                // .attr("font-weight", "bold")
+                .attr("fill", "#000");
 
-        legendItems
-            .append("text")
-            .text((d) => d)
-            .attr("x", 15)
-            .attr("y", 10);
+            legendItems
+                .append("rect")
+                .attr("width", 10)
+                .attr("height", 10)
+                .attr("fill", (d, i) => Object.values(colours)[i]);
+
+            legendItems
+                .append("text")
+                .text((d) => d)
+                .attr("x", 15)
+                .attr("y", 10);
+        } else {
+            legend
+                .append("text")
+                .text(legendTitle)
+                .attr("x", 30)
+                .attr("y", height / 4 - 20)
+                .attr("font-size", "16px")
+                // .attr("font-weight", "bold")
+                .attr("fill", "#000");
+
+            continuousColourLegend(colours, categories, legend);
+            console.log("continuous legend");
+        }
     }
 
-    fillLegend(goodBadColours, goodBadCategories);
+    fillLegend(goodBadColours, goodBadCategories, false, "Good/Bad Characters");
+
+    // get the dimensions of a selection
+    // console.log(legend.node().getBoundingClientRect());
 
     const embeddingData = await loadEmbedding();
     const filteredData = embeddingData.filter((d) => d.t == t);
+
+    let degreeValues = filteredData.map((d) => d.degree);
+    console.log(d3.extent(degreeValues));
+    // continuousColourLegend(degreeColours, d3.extent(degreeValues), legend);
+
     const scatter = scatterPlot()
         .width(width)
         .height(height)
@@ -297,7 +385,7 @@ async function main() {
 
     const options = select
         .selectAll("option")
-        .data(["Good/Bad", "House", "Degree", "Top Five"])
+        .data(["Good/Bad", "House", "Degree", "Main Characters"])
         .enter()
         .append("option")
         .text((d) => d)
@@ -310,24 +398,35 @@ async function main() {
         if (value === "Degree") {
             scatter.colourValue((d) => d.degree);
             network.colourValue((d) => d.degree);
+            fillLegend(degreeColours, d3.extent(degreeValues), true, "Degree");
         } else if (value === "House") {
             scatter.colours(houseColours);
             scatter.colourValue((d) => d.house);
             network.colours(houseColours);
             network.colourValue((d) => d.house);
-            fillLegend(houseColours, houseCategories);
+            fillLegend(houseColours, houseCategories, false, "House");
         } else if (value === "Good/Bad") {
             scatter.colours(goodBadColours);
             scatter.colourValue((d) => d.good_bad);
             network.colours(goodBadColours);
             network.colourValue((d) => d.good_bad);
-            fillLegend(goodBadColours, goodBadCategories);
-        } else if (value === "Top Five") {
+            fillLegend(
+                goodBadColours,
+                goodBadCategories,
+                false,
+                "Good/Bad Characters"
+            );
+        } else if (value === "Main Characters") {
             scatter.colours(topFiveColours);
             scatter.colourValue((d) => d.main);
             network.colours(topFiveColours, topFiveCategories);
             network.colourValue((d) => d.main);
-            fillLegend(topFiveColours, topFiveCategories);
+            fillLegend(
+                topFiveColours,
+                topFiveCategories,
+                false,
+                "Main Characters"
+            );
         }
         svg.call(scatter);
         svg.call(network);

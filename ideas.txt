@@ -40,6 +40,7 @@ After this, add an update colour (same green) to the scatter (this will be diffe
 - [X] Get the scatter working - go from uniform to trained.
 - [X] Add legend
 - [X] Add ability to change colour
+- [ ] Continuous colour legend
 - [ ] Add numbers back to the axes
 - [X] Get one random walk working.
 - [X] Label the random walks
