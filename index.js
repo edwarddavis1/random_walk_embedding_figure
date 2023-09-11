@@ -534,11 +534,29 @@ async function main() {
         if (value === "False") {
             scatter.data(embeddingData.filter((d) => d.t == t));
             network.data(graphData);
+            degreeValues = embeddingData.map((d) => d.degree);
             twoHop = false;
+            if (select.property("value") == "Degree") {
+                fillLegend(
+                    degreeColours,
+                    d3.extent(degreeValues),
+                    true,
+                    "Degree"
+                );
+            }
         } else if (value === "True") {
             scatter.data(twoHopEmbeddingData.filter((d) => d.t == t));
             network.data(twoHopGraphData);
+            degreeValues = twoHopEmbeddingData.map((d) => d.degree);
             twoHop = true;
+            if (select.property("value") == "Degree") {
+                fillLegend(
+                    degreeColours,
+                    d3.extent(degreeValues),
+                    true,
+                    "Degree"
+                );
+            }
         }
 
         svg.call(scatter);
