@@ -13,12 +13,15 @@ const svg = d3
     .attr("height", height);
 
 // Load data from data.json
-async function loadGraph(n) {
+async function loadGraph() {
     const data = await d3.json("./data/emnity_graph.json");
     return data;
 }
+async function loadTwoHopGraph() {
+    const data = await d3.json("./data/emnity_graph_two_hop.json");
+    return data;
+}
 
-// Load data from plot_df.csv
 async function loadEmbedding() {
     const data = await d3.csv("./data/plot_df.csv");
 
@@ -28,7 +31,17 @@ async function loadEmbedding() {
         d.y_emb = +d.y_emb;
         d.degree = +d.degree;
     });
+    return data;
+}
+async function loadTwoHopEmbedding() {
+    const data = await d3.csv("./data/plot_df_two_hop.csv");
 
+    // convert strings to numbers
+    data.forEach((d) => {
+        d.x_emb = +d.x_emb;
+        d.y_emb = +d.y_emb;
+        d.degree = +d.degree;
+    });
     return data;
 }
 
@@ -178,8 +191,12 @@ async function main() {
     // get the dimensions of a selection
     // console.log(legend.node().getBoundingClientRect());
 
+    let twoHop = false;
+
     const embeddingData = await loadEmbedding();
     const filteredData = embeddingData.filter((d) => d.t == t);
+    const twoHopEmbeddingData = await loadTwoHopEmbedding();
+    const twoHopFilteredData = twoHopEmbeddingData.filter((d) => d.t == t);
 
     let degreeValues = filteredData.map((d) => d.degree);
     fillLegend(degreeColours, d3.extent(degreeValues), true, "Degree");
@@ -209,6 +226,8 @@ async function main() {
     svg.call(scatter);
 
     const graphData = await loadGraph();
+    const twoHopGraphData = await loadTwoHopGraph();
+
     const network = networkPlot()
         .width((2 * width) / 5)
         .height(height)
@@ -364,7 +383,11 @@ async function main() {
             // remove all network class things
             // svg.selectAll(".network").remove();
 
-            scatter.data(embeddingData.filter((d) => d.t == t));
+            if (twoHop == false) {
+                scatter.data(embeddingData.filter((d) => d.t == t));
+            } else {
+                scatter.data(twoHopEmbeddingData.filter((d) => d.t == t));
+            }
             svg.call(scatter);
 
             // network.data(graphDataList[t]);
@@ -384,7 +407,11 @@ async function main() {
     resetButton.on("click", () => {
         t = 0;
 
-        scatter.data(embeddingData.filter((d) => d.t == t));
+        if (twoHop == false) {
+            scatter.data(embeddingData.filter((d) => d.t == t));
+        } else {
+            scatter.data(twoHopEmbeddingData.filter((d) => d.t == t));
+        }
         svg.call(scatter);
 
         svg.selectAll(".scatterPointsTrace").remove();
@@ -402,7 +429,7 @@ async function main() {
         .attr("class", "colour-text")
         .style("position", "absolute")
         .style("bottom", "20px")
-        .style("left", `${width / 2}px`);
+        .style("right", `${width / 2}px`);
 
     const select = d3
         .select("body")
@@ -410,7 +437,7 @@ async function main() {
         .attr("class", "colour-select")
         .style("position", "absolute")
         .style("bottom", "15px")
-        .style("left", `${width / 2 + 55}px`)
+        .style("right", `${width / 2 - 170}px`)
         .style("padding", "5px 10px")
         .style("border", "none")
         .style("background-color", colours[0])
@@ -463,6 +490,57 @@ async function main() {
                 "Main Characters"
             );
         }
+        svg.call(scatter);
+        svg.call(network);
+
+        interactivity();
+    });
+
+    d3.select("body")
+        .append("text")
+        .text("Two Hop: ")
+        .attr("class", "colour-text")
+        .style("position", "absolute")
+        .style("bottom", "20px")
+        .style("right", `${width / 2 - 250}px`);
+
+    const twoHopSelect = d3
+        .select("body")
+        .append("select")
+        .attr("class", "colour-select")
+        .style("position", "absolute")
+        .style("bottom", "15px")
+        .style("right", `${width / 2 - 340}px`)
+        .style("padding", "5px 10px")
+        .style("border", "none")
+        .style("background-color", colours[0])
+        .style("color", "#fff")
+        .style("font-size", "16px")
+        .style("cursor", "pointer");
+
+    twoHopSelect
+        .selectAll("option")
+        .data(["False", "True"])
+        .enter()
+        .append("option")
+        .text((d) => d)
+        .style("background-color", colours[0])
+        .style("color", "#fff");
+
+    twoHopSelect.on("change", () => {
+        const value = twoHopSelect.property("value");
+        svg.selectAll("circle, .networkLinks").remove();
+
+        if (value === "False") {
+            scatter.data(embeddingData.filter((d) => d.t == t));
+            network.data(graphData);
+            twoHop = false;
+        } else if (value === "True") {
+            scatter.data(twoHopEmbeddingData.filter((d) => d.t == t));
+            network.data(twoHopGraphData);
+            twoHop = true;
+        }
+
         svg.call(scatter);
         svg.call(network);
 
